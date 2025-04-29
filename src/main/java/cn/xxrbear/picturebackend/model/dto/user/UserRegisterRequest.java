@@ -1,4 +1,4 @@
-package cn.xxrbear.picturebackend.model.dto;
+package cn.xxrbear.picturebackend.model.dto.user;
 
 import lombok.Data;
 
