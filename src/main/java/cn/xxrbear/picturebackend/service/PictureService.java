@@ -1,6 +1,7 @@
 package cn.xxrbear.picturebackend.service;
 
 import cn.xxrbear.picturebackend.model.dto.picture.PictureQueryRequest;
+import cn.xxrbear.picturebackend.model.dto.picture.PictureReviewRequest;
 import cn.xxrbear.picturebackend.model.dto.picture.PictureUploadRequest;
 import cn.xxrbear.picturebackend.model.entity.Picture;
 import cn.xxrbear.picturebackend.model.entity.User;
@@ -58,4 +59,20 @@ public interface PictureService extends IService<Picture> {
      * @return
      */
     QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest);
+
+    /**
+     * 图片审核
+     *
+     * @param pictureReviewRequest
+     * @param loginUser
+     */
+    void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
+
+    /**
+     * 填充审核参数
+     *
+     * @param picture
+     * @param loginUser
+     */
+    void fillReviewParams(Picture picture, User loginUser);
 }

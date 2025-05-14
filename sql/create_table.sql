@@ -83,14 +83,19 @@ COMMENT ON COLUMN picture."isDelete" IS '是否删除';
 
 
 ALTER TABLE picture
-    -- 添加新列
-    ADD COLUMN reviewStatus INT DEFAULT 0 NOT NULL COMMENT '审核状态：0-待审核; 1-通过; 2-拒绝',
-    ADD COLUMN reviewMessage VARCHAR(512) NULL COMMENT '审核信息',
-    ADD COLUMN reviewerId BIGINT NULL COMMENT '审核人 ID',
-    ADD COLUMN reviewTime DATETIME NULL COMMENT '审核时间';
+    ADD COLUMN "reviewStatus" INT NOT NULL DEFAULT 0,
+    ADD COLUMN "reviewMessage" VARCHAR(512),
+    ADD COLUMN "reviewerId" BIGINT,
+    ADD COLUMN "reviewTime" TIMESTAMP;
+
+COMMENT ON COLUMN picture."reviewStatus" IS '审核状态：0-待审核; 1-通过; 2-拒绝';
+COMMENT ON COLUMN picture."reviewMessage" IS '审核信息';
+COMMENT ON COLUMN picture."reviewerId" IS '审核人 ID';
+COMMENT ON COLUMN picture."reviewTime" IS '审核时间';
+
 
 -- 创建基于 reviewStatus 列的索引
-CREATE INDEX idx_reviewStatus ON picture (reviewStatus);
+CREATE INDEX idx_reviewStatus ON picture ("reviewStatus");
 
 ALTER TABLE picture
     -- 添加新列

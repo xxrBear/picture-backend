@@ -103,5 +103,31 @@ public class Picture implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+
+    /**
+     * 状态：0-待审核; 1-通过; 2-拒绝
+     */
+    @TableField(value = "\"reviewStatus\"")
+    private Integer reviewStatus;
+
+    /**
+     * 审核信息
+     */
+    @TableField(value = "\"reviewMessage\"")
+    private String reviewMessage;
+
+    /**
+     * 审核人 id
+     */
+    @TableField(value = "\"reviewerId\"")
+    private Long reviewerId;
+
+    /**
+     * 审核时间
+     */
+    @TableField(value = "\"reviewTime\"")
+    private Date reviewTime;
+
 }
 

@@ -3,15 +3,18 @@ package cn.xxrbear.picturebackend.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.xxrbear.picturebackend.exception.BusinessException;
 import cn.xxrbear.picturebackend.exception.ErrorCode;
 import cn.xxrbear.picturebackend.exception.ThrowUtils;
 import cn.xxrbear.picturebackend.manager.FileManager;
 import cn.xxrbear.picturebackend.mapper.PictureMapper;
 import cn.xxrbear.picturebackend.model.dto.picture.PictureQueryRequest;
+import cn.xxrbear.picturebackend.model.dto.picture.PictureReviewRequest;
 import cn.xxrbear.picturebackend.model.dto.picture.PictureUploadRequest;
 import cn.xxrbear.picturebackend.model.dto.picture.UploadPictureResult;
 import cn.xxrbear.picturebackend.model.entity.Picture;
 import cn.xxrbear.picturebackend.model.entity.User;
+import cn.xxrbear.picturebackend.model.enums.PictureReviewStatusEnum;
 import cn.xxrbear.picturebackend.model.vo.PictureVO;
 import cn.xxrbear.picturebackend.model.vo.UserVO;
 import cn.xxrbear.picturebackend.service.PictureService;
@@ -19,6 +22,7 @@ import cn.xxrbear.picturebackend.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -185,6 +189,44 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         }
         if (StrUtil.isNotBlank(introduction)) {
             ThrowUtils.throwIf(introduction.length() > 800, ErrorCode.PARAMS_ERROR, "简介过长");
+        }
+    }
+
+    @Override
+    public void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser) {
+        Long id = pictureReviewRequest.getId();
+        Integer reviewStatus = pictureReviewRequest.getReviewStatus();
+        PictureReviewStatusEnum reviewStatusEnum = PictureReviewStatusEnum.getEnumByValue(reviewStatus);
+        if (id == null || reviewStatusEnum == null || PictureReviewStatusEnum.REVIEWING.equals(reviewStatusEnum)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 判断是否存在
+        Picture oldPicture = this.getById(id);
+        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
+        // 已是该状态
+        if (oldPicture.getReviewStatus().equals(reviewStatus)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请勿重复审核");
+        }
+        // 更新审核状态
+        Picture updatePicture = new Picture();
+        BeanUtils.copyProperties(pictureReviewRequest, updatePicture);
+        updatePicture.setReviewerId(loginUser.getId());
+        updatePicture.setReviewTime(new Date());
+        boolean result = this.updateById(updatePicture);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+    }
+
+    @Override
+    public void fillReviewParams(Picture picture, User loginUser) {
+        if (userService.isAdmin(loginUser)) {
+            // 管理员自动过审
+            picture.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+            picture.setReviewerId(loginUser.getId());
+            picture.setReviewMessage("管理员自动过审");
+            picture.setReviewTime(new Date());
+        } else {
+            // 非管理员，创建或编辑都要改为待审核
+            picture.setReviewStatus(PictureReviewStatusEnum.REVIEWING.getValue());
         }
     }
 
